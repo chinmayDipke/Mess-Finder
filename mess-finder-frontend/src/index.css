@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Vibrant background for the whole app */
+body {
+  background: linear-gradient(135deg, #ff6b6b 0%, #f7d716 100%);
+  min-height: 100vh;
+  font-family: "Poppins", "Segoe UI", Arial, sans-serif;
+}
+
+/* Card-like appearance for main containers */
+.p-4 {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  margin: 2rem auto;
+  max-width: 600px;
+  padding: 2rem !important;
+  border: 2px solid #f7d716;
+}
+
+/* Vibrant headings */
+h2,
+h3 {
+  color: #ff6b6b;
+  text-shadow: 1px 2px 8px #f7d71688;
+}
+
+/* Links */
+a,
+.text-blue-500 {
+  color: #1fa2ff !important;
+  font-weight: bold;
+  transition: color 0.2s;
+}
+a:hover,
+.text-blue-500:hover {
+  color: #ff6b6b !important;
+  text-decoration: underline;
+}
+
+/* List bullets and menu */
+.list-disc li {
+  color: #333;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+  padding-left: 1.2em;
+}
+.list-disc li::before {
+  content: "🍽️";
+  position: absolute;
+  left: 0;
+}
+
+/* Price and delivery icons */
+.mb-2 {
+  font-size: 1.1rem;
+  color: #222;
+  background: linear-gradient(90deg, #f7d71633, #ff6b6b22);
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  margin-bottom: 0.7rem !important;
+  display: inline-block;
+}
+
+/* Responsive tweaks */
+@media (max-width: 700px) {
+  .p-4 {
+    max-width: 98vw;
+    padding: 1rem !important;
+  }
+}
