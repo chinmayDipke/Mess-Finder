@@ -6,6 +6,15 @@ function OwnerDashboard() {
       <p className="mt-4 text-gray-700">
         You can add or update your mess info here.
       </p>
+      <button
+        className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
+        onClick={() => {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+        }}
+      >
+        Logout
+      </button>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AdminDashboard from "./pages/AdminDashboard";
 import OwnerDashboard from "./pages/OwnerDashboard";
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (
@@ -18,8 +19,22 @@ function App() {
         <Route path="/messes/:id" element={<MessDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/owner" element={<OwnerDashboard />} />
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute allowedRoles={["admin"]}>
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/owner"
+          element={
+            <PrivateRoute allowedRoles={["owner"]}>
+              <OwnerDashboard />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </Router>
   );
