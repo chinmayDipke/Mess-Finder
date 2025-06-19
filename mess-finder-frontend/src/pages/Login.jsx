@@ -1,14 +1,15 @@
 // src/pages/Login.jsx
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -16,8 +17,21 @@ function Login() {
         "http://localhost:5000/api/auth/login",
         form
       );
-      localStorage.setItem("token", res.data.token);
-      setMessage("Login successful!");
+      const token = res.data.token;
+
+      localStorage.setItem("token", token);
+
+      // Decode token to get role
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const role = payload.role;
+
+      if (role === "admin") {
+        navigate("/admin");
+      } else if (role === "owner") {
+        navigate("/owner");
+      } else {
+        setMessage("Unknown role");
+      }
     } catch (err) {
       setMessage(err.response?.data?.error || "Login failed");
     }

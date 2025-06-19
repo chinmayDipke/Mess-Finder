@@ -6,6 +6,8 @@ import MessList from "./pages/MessList";
 import MessDetail from "./pages/MessDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AdminDashboard from "./pages/AdminDashboard";
+import OwnerDashboard from "./pages/OwnerDashboard";
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
         <Route path="/messes/:id" element={<MessDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/owner" element={<OwnerDashboard />} />
       </Routes>
     </Router>
   );
