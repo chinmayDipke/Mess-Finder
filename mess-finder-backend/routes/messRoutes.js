@@ -7,16 +7,13 @@ const path = require("path");
 
 // Storage config
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 // GET all messes (public)
 router.get("/", async (req, res) => {
@@ -26,6 +23,20 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.error("Error fetching messes:", error.message);
     res.status(500).json({ error: "Failed to fetch mess data" });
+  }
+});
+
+// Public route to get all messes
+router.get("/all", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, name, area, price, delivery, menu, image_url FROM messes"
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching messes:", error.message);
+    res.status(500).json({ error: "Failed to fetch messes" });
   }
 });
 
@@ -80,36 +91,35 @@ router.post(
   }
 );
 
-// POST /api/mess/upload - with image upload
+// Protected route to add mess with image
 router.post(
   "/upload",
   authenticateUser,
   upload.single("image"),
   async (req, res) => {
     const { name, area, price, delivery, menu } = req.body;
-    const imageFile = req.file;
-    const menuArray = menu.split(",").map((item) => item.trim());
+    const ownerId = req.user.id;
 
-    if (!name || !area || !price || !delivery || !menu || !imageFile) {
+    if (!name || !area || !price || !delivery || !menu || !req.file) {
       return res
         .status(400)
         .json({ error: "All fields and image are required" });
     }
 
-    const imagePath = `/uploads/${imageFile.filename}`;
+    const imageUrl = `/uploads/${req.file.filename}`;
+    const menuArray = menu.split(",").map((item) => item.trim());
 
     try {
       const result = await pool.query(
-        "INSERT INTO messes (name, area, price, delivery, menu, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-        [name, area, price, delivery, menuArray, imagePath]
+        "INSERT INTO messes (name, area, price, delivery, menu, image_url, owner_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+        [name, area, price, delivery === "true", menuArray, imageUrl, ownerId]
       );
 
-      res.status(201).json({
-        message: "Mess with image added successfully",
-        mess: result.rows[0],
-      });
-    } catch (error) {
-      console.error("Error adding mess with image:", error.message);
+      res
+        .status(201)
+        .json({ message: "Mess uploaded successfully", mess: result.rows[0] });
+    } catch (err) {
+      console.error("Error uploading mess:", err.message);
       res.status(500).json({ error: "Failed to add mess with image" });
     }
   }

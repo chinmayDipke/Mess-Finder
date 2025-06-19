@@ -10,15 +10,19 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 router.post("/register", async (req, res) => {
   const { name, email, password, phone, role } = req.body;
 
-  // Basic validation
   if (!name || !email || !password || !role) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  if (!["owner", "admin"].includes(role)) {
     return res
       .status(400)
-      .json({ error: "Name, email, password, and role are required." });
+      .json({ error: "Invalid role. Must be 'owner' or 'admin'" });
   }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+
     const result = await pool.query(
       "INSERT INTO users (name, email, password, phone, role) VALUES ($1, $2, $3, $4, $5) RETURNING id",
       [name, email, hashedPassword, phone, role]
@@ -29,17 +33,12 @@ router.post("/register", async (req, res) => {
       userId: result.rows[0].id,
     });
   } catch (err) {
-    console.error("Registration Error:", err.message);
-    // Check for unique constraint violation (email already exists)
     if (err.code === "23505") {
-      // PostgreSQL unique violation error code
-      return res
-        .status(409)
-        .json({ error: "An account with this email already exists." });
+      return res.status(409).json({ error: "Email already exists" });
     }
     res
       .status(500)
-      .json({ error: "User registration failed", details: err.message });
+      .json({ error: "Registration failed", details: err.message });
   }
 });
 
