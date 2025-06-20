@@ -1,8 +1,10 @@
 // src/pages/Register.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Register() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -11,6 +13,30 @@ function Register() {
     role: "owner", // can also be "admin"
   });
   const [message, setMessage] = useState("");
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const currentTime = Date.now() / 1000;
+
+        // Check if token is not expired
+        if (!payload.exp || payload.exp > currentTime) {
+          if (payload.role === "admin") {
+            navigate("/admin", { replace: true });
+          } else if (payload.role === "owner") {
+            navigate("/owner", { replace: true });
+          }
+        } else {
+          localStorage.removeItem("token");
+        }
+      } catch (error) {
+        localStorage.removeItem("token");
+      }
+    }
+  }, [navigate]);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });

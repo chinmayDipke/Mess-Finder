@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AdminDashboard from "./pages/AdminDashboard";
 import OwnerDashboard from "./pages/OwnerDashboard";
+import MessUpload from "./pages/MessUpload";
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -32,6 +33,14 @@ function App() {
           element={
             <PrivateRoute allowedRoles={["owner"]}>
               <OwnerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/upload-mess"
+          element={
+            <PrivateRoute allowedRoles={["owner"]}>
+              <MessUpload />
             </PrivateRoute>
           }
         />
