@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Public route to get all messes
+// Public route to get all messes with selected fields
 router.get("/all", async (req, res) => {
   try {
     const result = await pool.query(
@@ -58,26 +58,29 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Add a new mess
+// POST add a new mess (protected)
 router.post(
   "/add",
   authenticateUser,
-  upload.single("image_url"),
+  upload.single("image"),
   async (req, res) => {
     const { name, area, price, delivery, menu } = req.body;
-    const image_url = req.file.path; // Get the file path from the request
+    const ownerId = req.user.id;
 
-    // Basic validation
-    if (!name || !area || !price || !delivery || !menu || !image_url) {
-      return res.status(400).json({ error: "All fields are required" });
+    if (!name || !area || !price || !menu || !req.file) {
+      return res
+        .status(400)
+        .json({ error: "All fields and image are required" });
     }
+
+    const image_url = `/uploads/${req.file.filename}`;
+    const menuArray = menu.split(",").map((item) => item.trim());
 
     try {
       const result = await pool.query(
-        `INSERT INTO messes (name, area, price, delivery, menu, image_url)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-        [name, area, price, delivery, menu, image_url]
+        `INSERT INTO messes (name, area, price, delivery, menu, image_url, owner_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [name, area, price, delivery === "true", menuArray, image_url, ownerId]
       );
 
       res.status(201).json({
@@ -85,13 +88,13 @@ router.post(
         mess: result.rows[0],
       });
     } catch (error) {
-      console.error("Database insert error:", error.message);
-      res.status(500).json({ error: "Internal server error" });
+      console.error("Error adding mess with image:", error.message);
+      res.status(500).json({ error: "Failed to add mess with image" });
     }
   }
 );
 
-// Protected route to add mess with image
+// Protected route to add mess with image (alternative upload route)
 router.post(
   "/upload",
   authenticateUser,
@@ -129,11 +132,11 @@ router.post(
 router.put(
   "/:id",
   authenticateUser,
-  upload.single("image_url"),
+  upload.single("image"),
   async (req, res) => {
     const messId = req.params.id;
     const { name, area, price, delivery, menu } = req.body;
-    let image_url = req.file.path; // Get the file path from the request
+    let image_url = req.file ? `/uploads/${req.file.filename}` : null;
 
     try {
       // If no new image is uploaded, keep the old image_url
@@ -142,8 +145,12 @@ router.put(
           "SELECT image_url FROM messes WHERE id = $1",
           [messId]
         );
-        image_url = result.rows[0].image_url;
+        image_url = result.rows[0]?.image_url || null;
       }
+
+      const menuArray = menu
+        ? menu.split(",").map((item) => item.trim())
+        : null;
 
       const result = await pool.query(
         `UPDATE messes SET 
@@ -154,7 +161,7 @@ router.put(
         menu = $5, 
         image_url = $6 
       WHERE id = $7 RETURNING *`,
-        [name, area, price, delivery, menu, image_url, messId]
+        [name, area, price, delivery === "true", menuArray, image_url, messId]
       );
 
       if (result.rows.length === 0) {
