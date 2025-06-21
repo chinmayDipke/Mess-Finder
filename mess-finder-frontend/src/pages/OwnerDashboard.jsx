@@ -19,27 +19,28 @@ function OwnerDashboard() {
     if (!token) {
       navigate("/login");
       return;
-    }
-
-    // Decode token to get user info
+    } // Decode token to get user info
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       setUser(payload);
-      fetchMyMesses(payload.id);
+      fetchMyMesses();
     } catch (error) {
       console.error("Invalid token:", error);
       logout();
     }
   }, [navigate, token]);
-
   const fetchMyMesses = async (ownerId) => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/mess/all");
-      const ownerMesses = response.data.filter(
-        (mess) => mess.owner_id === ownerId
+      const response = await axios.get(
+        "http://localhost:5000/api/mess/owner/messes",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      setMyMesses(ownerMesses);
+      setMyMesses(response.data);
     } catch (error) {
       console.error("Error fetching messes:", error);
       setMessage("Error loading your messes");
@@ -62,7 +63,7 @@ function OwnerDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMessage("Mess deleted successfully!");
-      fetchMyMesses(user.id);
+      fetchMyMesses();
     } catch (error) {
       console.error("Error deleting mess:", error);
       setMessage("Error deleting mess. Please try again.");
@@ -84,10 +85,9 @@ function OwnerDashboard() {
           Authorization: `Bearer ${token}`,
         },
       });
-
       setMessage("Mess updated successfully!");
       setEditingMess(null);
-      fetchMyMesses(user.id);
+      fetchMyMesses();
     } catch (error) {
       console.error("Error updating mess:", error);
       setMessage("Error updating mess. Please try again.");

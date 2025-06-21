@@ -179,4 +179,19 @@ router.put(
   }
 );
 
+// Get messes by owner (protected route)
+router.get("/owner/messes", authenticateUser, async (req, res) => {
+  const ownerId = req.user.id;
+  try {
+    const result = await pool.query(
+      "SELECT * FROM messes WHERE owner_id = $1 ORDER BY id DESC",
+      [ownerId]
+    );
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error("Error fetching owner's messes:", error.message);
+    res.status(500).json({ error: "Failed to fetch your messes" });
+  }
+});
+
 module.exports = router;
